@@ -1,11 +1,11 @@
 package pedestrian.modules.kv.mongodb
 
 import scala.concurrent.{ ExecutionContext, Future, Promise }
-import scala.util.control.NonFatal
 
+import org.bson.conversions.Bson
 import org.json4s._
 
-import org.mongodb.scala.{ MongoClient, MongoCollection, Observer }
+import org.mongodb.scala.{ MongoClient, Observer }
 import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Projections._
@@ -14,8 +14,11 @@ import org.mongodb.scala.model.Updates._
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.result.UpdateResult
 
-import pedestrian.core.Lifecycle
 import pedestrian.modules.kv.KVStoreSupport
+import pedestrian.core.Lifecycle
+
+import org.mongodb.scala.MongoCollection
+import scala.util.control.NonFatal
 
 trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
   

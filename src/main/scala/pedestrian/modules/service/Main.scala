@@ -9,10 +9,13 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.stream.ActorMaterializer
 
 import pedestrian.modules.KeyValueStoreApp
+import pedestrian.modules.access.{ AccessControlSupport, FixtureDataAccessControlSupport }
 import pedestrian.modules.kv.InMemoryKVStoreSupport
+import pedestrian.modules.messaging.InMemoryMessageProductionSupport
 
 object Main extends App with Json4sMarshalling {
     
@@ -20,23 +23,37 @@ object Main extends App with Json4sMarshalling {
   implicit val ec = system.dispatcher
   implicit val materializer = ActorMaterializer()
   
-  val app = new KeyValueStoreApp with InMemoryKVStoreSupport {
-    
+  val app = new KeyValueStoreApp 
+    with InMemoryKVStoreSupport 
+    with InMemoryMessageProductionSupport 
+    with FixtureDataAccessControlSupport
+  {
+    override val publicItemIds = Set("foo") 
   }
   Await.result(app.startup,5.seconds)
   
-  val routes = pathPrefix("v1" / "kv") {
-    path("users" / Segment / "items" / Segment) { (userId,itemId) =>
-      get {
-        complete(app.getItem(userId, itemId))
-      } ~
-      put {
-        entity(as[JValue]) { value =>
-          complete(app.putItem(userId, itemId, value).map(_ => StatusCodes.Accepted))
+  val exceptionHandler = ExceptionHandler {
+    case _: AccessControlSupport.AccessException => complete(StatusCodes.Forbidden)
+  }
+  
+  val routes = handleExceptions(exceptionHandler) {
+    pathPrefix("v1" / "kv") {
+      path("users" / Segment / "items" / Segment) { (userId,itemId) =>
+        headerValueByName("x-requesting-user-id") { requestingUser =>
+          get {
+            complete {
+              app.getItem(userId, itemId)(requestingUser)
+            }
+          } ~
+          put {
+            entity(as[JValue]) { value =>
+              complete(app.putItem(userId, itemId, value)(requestingUser).map(_ => StatusCodes.Accepted))
+            }
+          } ~
+          delete {
+            complete(app.removeItem(userId, itemId)(requestingUser).map(_ => StatusCodes.OK))
+          }
         }
-      } ~
-      delete {
-        complete(app.removeItem(userId, itemId).map(_ => StatusCodes.OK))
       }
     }
   }
