@@ -85,12 +85,17 @@ body {
 .reveal em {
   font-style: italic; }
 
+.reveal li {
+  font-size: 0.8em;
+}
+
 .reveal ol,
 .reveal dl,
 .reveal ul {
   display: inline-block;
   text-align: left;
-  margin: 0 0 0 1em; }
+  margin: 0 0 0 1em;
+}
 
 .reveal ol {
   list-style-type: decimal; }
