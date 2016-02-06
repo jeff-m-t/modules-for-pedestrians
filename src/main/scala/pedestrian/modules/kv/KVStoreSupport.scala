@@ -1,7 +1,7 @@
 package pedestrian.modules.kv
 
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
+
 import org.json4s._
 
 trait KVStoreSupport {

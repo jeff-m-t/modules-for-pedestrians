@@ -1,19 +1,19 @@
-package pedestrian.modules.kv
+package pedestrian.modules.kv.mongodb
 
-import scala.concurrent.{Await,Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
-import scala.concurrent.stm._
 
 import org.json4s._
 import org.json4s.JsonDSL._
 
-import org.scalatest.FlatSpec
-import org.scalatest.ShouldMatchers
+import org.scalatest.{ FlatSpec, ShouldMatchers }
 
-class InMemoryKVStoreSupportTest extends FlatSpec with ShouldMatchers {
+import pedestrian.modules.kv.KVStoreSupport
+
+class MongoDbKVStoreSupportTest extends FlatSpec with ShouldMatchers {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def createModule: KVStoreSupport = new InMemoryKVStoreSupport() {}
+  def createModule: KVStoreSupport = new MongoDbKVStoreSupport() {}
 
   it should "allow values to be stored and retrieved" in {
     val store = createModule
@@ -45,5 +45,5 @@ class InMemoryKVStoreSupportTest extends FlatSpec with ShouldMatchers {
     waitFor(store.kvGet(userId, key)) should be (None)
   }
   
-  def waitFor[T](f: Future[T], d: Duration = 1.second): T = Await.result(f,d) 
+  def waitFor[T](f: Future[T], d: Duration = 10.second): T = Await.result(f,d) 
 }

@@ -1,11 +1,10 @@
 package pedestrian.modules.service
 
-import org.json4s.JValue
+import org.json4s._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling._
-import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
@@ -29,7 +28,10 @@ object Main extends App with Json4sMarshalling {
       } ~
       put {
         entity(as[JValue]) { value =>
-          complete(app.putItem(userId, itemId, value).map(_ => StatusCodes.Accepted))
+          complete{
+            println("Here")
+            app.putItem(userId, itemId, value).map(_ => StatusCodes.Accepted)
+          }
         }
       } ~
       delete {

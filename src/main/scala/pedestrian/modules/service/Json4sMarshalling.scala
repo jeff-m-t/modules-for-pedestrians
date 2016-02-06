@@ -1,11 +1,12 @@
 package pedestrian.modules.service
 
+import akka.http.scaladsl.marshalling._
+import akka.http.scaladsl.unmarshalling._
+
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-import akka.http.scaladsl.marshalling._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling._
 
 trait Json4sMarshalling {
   
