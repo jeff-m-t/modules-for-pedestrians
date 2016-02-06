@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Modules for Pedestrians</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/serif.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+				<section>
+					<section data-transition="none">
+						<h3>Modules for Pedestrians</h3>
+						<p>A Shaggy Dog Story</p>
+					</section>
+					<section data-transition="none">
+						<h3>Modules for Pedestrians</h3>
+						<p>A Shaggy Dog Story with Cake!</p>
+					</section>
+				</section>
+
+				<section>
+					<h3>Introduction</h3>
+					<p><i>Wherein:</i></p>
+					<ul>
+						<li>bets are hedged</li>
+						<li>industry best practice CYA techniques are employed</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Chapter 1 - Setup</h3>
+					<p>Wherein:</p>
+					<ul>
+						<li>an application that stores user specific data is envisioned</li>
+						<li>an interface for an underlaying KV Store is created</li>
+						<li>a simple, in-memory implementation is proposed</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Chapter 2 - Prototype</h3>
+					<p>Wherein:</p>
+					<ul>
+						<li>the application is exposed as a service</li>
+						<li>early integration ensues</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Chapter 3 - Implementation</h3>
+					<p>Wherein:</p>
+					<ul>
+						<li>a concrete backend is chosen</li>
+						<li>a real world implementation is attempted</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Chapter 4 - Lifecycle</h3>
+					<p>Wherein:</p>
+					<ul>
+						<li>a configuration issue is discovered</li>
+						<li>a simple application lifecycle is employed</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Chapter 5 - Business Logic</h3>
+					<p>Wherein:</p>
+					<ul>
+						<li>scope creeps</li>
+						<li>early idealizations are abandoned</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Epilogue</h3>
+					<p>hints a a broader perspective</p>
+					<p>a path forward is explored</p>
+				</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>

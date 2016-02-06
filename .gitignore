@@ -18,7 +18,9 @@ project/plugins/project/
 .project
 .classpath
 .settings
+.cache*
 
 # ensime specific
 *#
 *~
+/bin/
