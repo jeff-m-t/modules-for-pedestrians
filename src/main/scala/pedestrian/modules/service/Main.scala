@@ -1,10 +1,13 @@
 package pedestrian.modules.service
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import org.json4s._
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 
@@ -20,6 +23,7 @@ object Main extends App with Json4sMarshalling {
   val app = new KeyValueStoreApp with InMemoryKVStoreSupport {
     
   }
+  Await.result(app.startup,5.seconds)
   
   val routes = pathPrefix("v1" / "kv") {
     path("users" / Segment / "items" / Segment) { (userId,itemId) =>
@@ -28,17 +32,13 @@ object Main extends App with Json4sMarshalling {
       } ~
       put {
         entity(as[JValue]) { value =>
-          complete{
-            println("Here")
-            app.putItem(userId, itemId, value).map(_ => StatusCodes.Accepted)
-          }
+          complete(app.putItem(userId, itemId, value).map(_ => StatusCodes.Accepted))
         }
       } ~
       delete {
         complete(app.removeItem(userId, itemId).map(_ => StatusCodes.OK))
       }
     }
-    
   }
   
   Http().bindAndHandle(routes,"0.0.0.0",8080)

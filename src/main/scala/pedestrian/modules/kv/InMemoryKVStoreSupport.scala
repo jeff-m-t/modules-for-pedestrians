@@ -5,8 +5,10 @@ import scala.concurrent.stm.{ TMap, _ }
 
 import org.json4s._
 
-trait InMemoryKVStoreSupport extends KVStoreSupport {
-  protected val store: TMap[String,Map[String,JValue]] = TMap.empty
+import pedestrian.core.Lifecycle
+
+trait InMemoryKVStoreSupport extends KVStoreSupport with Lifecycle{
+  val store: TMap[String,Map[String,JValue]] = TMap.empty
   
   def kvPut(userId: String, key: String, value: JValue)(implicit ec: ExecutionContext): Future[Unit] = Future {
     atomic { implicit txn =>
@@ -28,4 +30,7 @@ trait InMemoryKVStoreSupport extends KVStoreSupport {
       value <- userData.get(key)
     } yield value
   }
+  
+  abstract override def startup(implicit ec: ExecutionContext) = super.startup
+  abstract override def shutdown(implicit ec: ExecutionContext) = super.shutdown
 }
