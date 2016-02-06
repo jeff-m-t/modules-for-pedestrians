@@ -1,8 +1,8 @@
 package pedestrian.modules.kv
 
-import scala.concurrent.{ ExecutionContext, Future }
-
-import org.json4s.JValue
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+import org.json4s._
 
 trait KVStoreSupport {
   def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): Future[Option[JValue]]
