@@ -26,12 +26,13 @@ abstract class KeyValueStoreApp
   val producer = Promise[Producer[Protocol.KVMessage]]()
   
   def putItem(userId: String, itemId: String, value: JValue)(requesterId: String)(implicit ex: ExecutionContext): Future[Unit] = {
+    import ReaderFuture._
     val res: ReaderFuture[Config,Unit] = for {
-      ac <- readerFuture(accessControl.write(userId,itemId)).local((c:Config) => c.acc)
-      _ <- readerFuture((c: Config) => ac.enforce(requesterId))
-      _ <- readerFuture(kvPut(userId,itemId,value)).local((c: Config) => c.kv)
-      p <- readerFuture((c: Config) => producer.future)
-      _ <- readerFuture((c: Config) => p.sendMessage(Protocol.ItemUpdated(userId,itemId,value)))
+      ac <- accessControl.write(userId,itemId).local((c:Config) => c.acc).readerFuture
+      _  <- ac.enforce(requesterId).readerFuture
+      _  <- kvPut(userId,itemId,value).local((c: Config) => c.kv).readerFuture
+      p  <- producer.future.readerFuture
+      _  <- p.sendMessage(Protocol.ItemUpdated(userId,itemId,value)).readerFuture
     }
     yield ()
     
@@ -39,10 +40,11 @@ abstract class KeyValueStoreApp
   }
   
   def getItem(userId: String, itemId: String)(requesterId: String)(implicit ex: ExecutionContext): Future[Option[JValue]] = {
+    import ReaderFuture._
     val res: ReaderFuture[Config,Option[JValue]] = for {
-      ac <- readerFuture(accessControl.read(userId,itemId)).local((c:Config) => c.acc)
-      _ <- readerFuture((c: Config) => ac.enforce(requesterId))
-      value <- readerFuture(kvGet(userId,itemId)).local((c:Config) => c.kv)
+      ac    <- accessControl.read(userId,itemId).local((c:Config) => c.acc).readerFuture
+      _     <- ac.enforce(requesterId).readerFuture
+      value <- kvGet(userId,itemId).local((c:Config) => c.kv).readerFuture
     }
     yield value
     
@@ -50,12 +52,13 @@ abstract class KeyValueStoreApp
   }
       
   def removeItem(userId: String, itemId: String)(requesterId: String)(implicit ex: ExecutionContext): Future[Unit] = {
+    import ReaderFuture._
     val res: ReaderFuture[Config,Unit] = for {
-      ac <- readerFuture(accessControl.write(userId,itemId)).local((c:Config) => c.acc)
-      _ <- readerFuture((c: Config) => ac.enforce(requesterId))
-      _ <- readerFuture(kvDelete(userId,itemId)).local((c: Config) => c.kv)
-      p <- readerFuture((c: Config) => producer.future)
-      _ <- readerFuture((c: Config) => p.sendMessage(Protocol.ItemDeleted(userId,itemId)))
+      ac <- accessControl.write(userId,itemId).local((c:Config) => c.acc).readerFuture
+      _  <- ac.enforce(requesterId).readerFuture
+      _  <- kvDelete(userId,itemId).local((c: Config) => c.kv).readerFuture
+      p  <- producer.future.readerFuture
+      _  <- p.sendMessage(Protocol.ItemDeleted(userId,itemId)).readerFuture
     }
     yield ()
     
@@ -63,7 +66,9 @@ abstract class KeyValueStoreApp
   }
       
   override def startup(implicit ec: ExecutionContext) = {
-    val res = messageProduction.getProducer[Protocol.KVMessage](InMemoryProducerConfig("kvmessages")).local((c: Config) => c.msg).run(env)  
+    val res = 
+      messageProduction.getProducer[Protocol.KVMessage](InMemoryProducerConfig("kvmessages"))
+        .local((c: Config) => c.msg).run(env)  
 
     res.onSuccess{ case p => producer.success(p) }
 

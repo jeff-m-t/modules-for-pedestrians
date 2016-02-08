@@ -21,4 +21,14 @@ case class ReaderFuture[ENV,A](run: Reader[ENV,Future[A]]) {
 
 object ReaderFuture {
   def readerFuture[ENV,A](f: ENV => Future[A]): ReaderFuture[ENV,A] = ReaderFuture( Reader(f) )
+
+  def readerFuture[ENV,A](f: => Future[A]): ReaderFuture[ENV,A] = ReaderFuture( Reader(env => f) )
+  
+  implicit class ReaderOfFutureWrapper[ENV,A](val rof: Reader[ENV,Future[A]]) extends AnyVal {
+    def readerFuture = ReaderFuture(rof)
+  }
+  
+  implicit class FutureWrapper[ENV,A](val f: Future[A]) extends AnyVal {
+    def readerFuture = ReaderFuture( Reader((env: ENV) => f) )
+  }
 }
