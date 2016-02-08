@@ -4,6 +4,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 import pedestrian.core.{ Lifecycle, Marshaller, Unmarshaller }
 
+import scalaz.Reader
+
 sealed trait DestinationType
 case object Queue extends DestinationType
 case object Topic extends DestinationType
@@ -19,13 +21,17 @@ trait Producer[PublishedMessageType] {
   def disconnect(implicit ec: ExecutionContext): Future[Unit]
 }
 
-trait MessageProductionSupport extends Lifecycle {
-  def messageProduction: ProductionOps
+trait MessageProductionSupport {
+  type MessageProductionEnv
+  type ProducerConfigType <: ProducerConfig
+  type ProviderPublishedMessageType
   
+  def messageProduction: ProductionOps
+
   trait ProductionOps {
     def getProducer[PublishedMessageType]
           (config: InMemoryProducerConfig)
-          (implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,Array[Byte]]): Future[Producer[PublishedMessageType]]
+          (implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,ProviderPublishedMessageType]): Reader[MessageProductionEnv,Future[Producer[PublishedMessageType]]]
   }
 }
 
@@ -39,14 +45,18 @@ trait Consumer {
   def unsubscribe(implicit ec: ExecutionContext): Future[Unit]  
 }
 
-trait MessageConsumptionSupport extends Lifecycle{
+trait MessageConsumptionSupport {  
+  type MessageConsumptionEnv
+  type ConsumerConfigType <: ConsumerConfig
+  type ProviderMessageType
+  
   def messageConsumption: ConsumptionOps
   
   trait ConsumptionOps {
   	def getConsumer[MessageType, ResultType]
   	      (config: InMemoryConsumerConfig)
   	      (handler: MessageType => Future[ResultType])
-          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[Array[Byte],MessageType]): Future[Consumer]
+          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[ProviderMessageType,MessageType]): Reader[MessageConsumptionEnv,Future[Consumer]]
   }
 }
 
@@ -54,14 +64,14 @@ trait MessagingSupport extends MessageProductionSupport with MessageConsumptionS
   object messaging {
     def getProducer[PublishedMessageType]
           (config: InMemoryProducerConfig)
-          (implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,Array[Byte]]): Future[Producer[PublishedMessageType]]
-      = messageProduction.getProducer(config)(ec,marshaller)
+          (implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,ProviderPublishedMessageType]): Reader[MessageProductionEnv,Future[Producer[PublishedMessageType]]]
+      = Reader(env => messageProduction.getProducer(config)(ec,marshaller).run(env))
 
   	def getConsumer[MessageType, ResultType]
   	      (config: InMemoryConsumerConfig)
   	      (handler: MessageType => Future[ResultType])
-          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[Array[Byte],MessageType]): Future[Consumer]
-      = messageConsumption.getConsumer(config)(handler)(ec,unmarshaller) 
+          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[ProviderMessageType,MessageType]): Reader[MessageConsumptionEnv,Future[Consumer]]
+      = Reader(env => messageConsumption.getConsumer(config)(handler)(ec,unmarshaller).run(env)) 
   }
 }
 

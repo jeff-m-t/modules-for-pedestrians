@@ -2,14 +2,19 @@ package pedestrian.modules.access
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+import scalaz._
+import scalaz.Scalaz._
+
 trait AccessControlSupport {
   import AccessControlSupport._
+  
+  type AccessControlEnv
   
   def accessControl: AccessControlOps
   
   trait AccessControlOps {
-    def read(userId: String, itemId: String)(implicit ec: ExecutionContext): Future[AccessControl]
-    def write(userId: String, itemId: String)(implicit ec: ExecutionContext): Future[AccessControl]
+    def read(userId: String, itemId: String)(implicit ec: ExecutionContext): Reader[AccessControlEnv,Future[AccessControl]]
+    def write(userId: String, itemId: String)(implicit ec: ExecutionContext): Reader[AccessControlEnv,Future[AccessControl]]
   }  
 }
 

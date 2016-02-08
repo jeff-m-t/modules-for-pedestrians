@@ -9,6 +9,7 @@ import pedestrian.modules.access.FixtureDataAccessControlSupport
 import pedestrian.modules.kv.InMemoryKVStoreSupport
 import pedestrian.modules.messaging.InMemoryMessageProductionSupport
 import pedestrian.modules.access.AccessControlSupport
+import scala.concurrent.stm.TMap
 
 class KeyValueStoreAppTest extends FlatSpec with ShouldMatchers {
   import ExecutionContext.Implicits.global
@@ -26,7 +27,8 @@ class KeyValueStoreAppTest extends FlatSpec with ShouldMatchers {
       with InMemoryMessageProductionSupport
       with FixtureDataAccessControlSupport 
     {
-      override val publicItemIds = Set("item1")
+      override val env = Config(TMap.empty,(),Set("item1"))
+      override val messageMarshaller = Protocol.byteArrayMarshaller
     }
     waitFor(app.startup)
     
@@ -42,30 +44,34 @@ class KeyValueStoreAppTest extends FlatSpec with ShouldMatchers {
   }
   
   it should "publish an ItemUpdated message when a user adds or updates an item" in {
+    val data = TMap.empty[String,JValue].asInstanceOf[InMemoryKVStoreSupport#KeyValueStoreEnv]
+    
     val app = new KeyValueStoreApp 
       with InMemoryKVStoreSupport 
       with InMemoryMessageProductionSupport
       with FixtureDataAccessControlSupport 
     {
-      override val publicItemIds = Set.empty[String]
+      override val env = Config(data,(),Set("item1"))
+      override val messageMarshaller = Protocol.byteArrayMarshaller
     }
     waitFor(app.startup)
     
-    app.store.snapshot.size should be (0)
+    data.snapshot.size should be (0)
     app.producedMessages.snapshot.size should be (0)
     
     waitFor(app.putItem(userId,itemId, ("foo" -> "bar") ~ ("baz" -> "qux"))(userId))
     
-    app.store.snapshot.size should be (1)
+    data.snapshot.size should be (1)
     app.producedMessages.snapshot("kvmessages").size should be (1)
     
     waitFor(app.putItem(userId,itemId, ("foo" -> "bar1") ~ ("baz" -> "qux1"))(userId))
     
-    app.store.snapshot.size should be (1)
+    data.snapshot.size should be (1)
     app.producedMessages.snapshot("kvmessages").size should be (2)
     
     waitFor(app.shutdown)
   }
+
   
   def waitFor[T](f: Future[T], d: Duration = 2.seconds): T = Await.result(f,d)
 }

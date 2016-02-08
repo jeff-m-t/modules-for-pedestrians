@@ -16,6 +16,7 @@ class InMemoryMessagingSupportTest extends FlatSpec with ShouldMatchers with Eve
   
   "MessageConbsumptionSupport" should "provide consumers that process messages until disconnected" in {
     val module = new BlankSlate with InMemoryMessageConsumptionSupport
+    val env: module.MessageConsumptionEnv = ()
     
     waitFor(module.startup)
     
@@ -42,7 +43,7 @@ class InMemoryMessagingSupportTest extends FlatSpec with ShouldMatchers with Eve
             consumedMessages += res
              res 
           }
-        }
+        }.run(env)
     )
   
     println("Processing...")

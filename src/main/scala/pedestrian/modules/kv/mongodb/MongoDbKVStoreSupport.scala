@@ -20,86 +20,56 @@ import pedestrian.core.Lifecycle
 import org.mongodb.scala.MongoCollection
 import scala.util.control.NonFatal
 
-trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
+import scalaz.Reader
+
+trait MongoDbKVStoreSupport extends KVStoreSupport {
   
   import MongoDbKVStoreSupport._
   
-  val mongoUrl: String
-  val mongoDatabase: String
-  val mongoCollection: String
+  type KeyValueStoreEnv = MongoCollection[Document]
   
-  val client = Promise[MongoClient]()
-  val collection = Promise[MongoCollection[Document]]()
-  
-  def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): Future[Option[JValue]] = {
+  def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): Reader[KeyValueStoreEnv,Future[Option[JValue]]] = Reader { env =>
     
     val query = equal("userId",userId)
     val proj = fields(excludeId(),include(key))
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Option[JValue]]()
-        c.find(query).projection(proj).first.subscribe(getObs(key,p))    
+        env.find(query).projection(proj).first.subscribe(getObs(key,p))    
         p.future
       }
     } yield res
   }
   
-  def kvPut(userId: String, key: String, value: JValue)(implicit ec: ExecutionContext): Future[Unit] = {
+  def kvPut(userId: String, key: String, value: JValue)(implicit ec: ExecutionContext): Reader[KeyValueStoreEnv, Future[Unit]] = Reader { env =>
     
     val filter = Document("userId"->userId)
     val update = set(key, JValueBsonMarshalling.jValueToBson(value))
     val options = new UpdateOptions(); options.upsert(true);
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Unit]()
-        c.updateOne(filter,update,options).subscribe(updateObs(p))    
+        env.updateOne(filter,update,options).subscribe(updateObs(p))    
         p.future
       }
     } yield res
   }
   
-  def kvDelete(userId: String, key: String)(implicit ec: ExecutionContext): Future[Unit] = {
+  def kvDelete(userId: String, key: String)(implicit ec: ExecutionContext): Reader[KeyValueStoreEnv,Future[Unit]] = Reader { env =>
 
     val filter = equal("userId",userId)
     val update = unset(key)
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Unit]()
-        c.updateOne(filter,update).subscribe(updateObs(p))   
+        env.updateOne(filter,update).subscribe(updateObs(p))   
         p.future
       }
     } yield res 
   }
-  
-  abstract override def startup(implicit ec: ExecutionContext) = {   
-    try {
-      val c = MongoClient(mongoUrl)
-      val d = c.getDatabase(mongoDatabase)
-      val col = d.getCollection(mongoCollection)
-      
-      client.success(c)
-      collection.success(col)
-    }
-    catch {
-      case NonFatal(ex) => collection.failure(ex)
-    }
-    
-    super.startup
-  }
- 
-  abstract override def shutdown(implicit ec: ExecutionContext) = 
-    for {
-      _ <- super.shutdown
-      c <- client.future
-    }
-    yield c.close()
-  
 }
 
 object MongoDbKVStoreSupport {

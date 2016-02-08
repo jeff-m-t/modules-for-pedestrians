@@ -9,6 +9,8 @@ import scalaz.concurrent.Task
 import scalaz.stream._
 import scalaz.stream.async.mutable.{Queue => szQueue}
 
+import scalaz.Reader
+
 case class InMemoryProducerConfig(destination: String) extends ProducerConfig {
   val destinationType = Queue
 }
@@ -16,12 +18,15 @@ case class InMemoryProducerConfig(destination: String) extends ProducerConfig {
 trait InMemoryMessageProductionSupport extends MessageProductionSupport with ScalazStreamMessagingProvider[Array[Byte]] {
   val producedMessages = TMap.empty[String, List[ProviderPublishedMessageType]]
  
+  type MessageProductionEnv = Unit
   type ProducerConfigType = InMemoryProducerConfig
   type ProviderPublishedMessageType = Array[Byte]
  
   object messageProduction extends ProductionOps {
-  	def getProducer[PublishedMessageType](config: InMemoryProducerConfig)(implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,Array[Byte]]): Future[Producer[PublishedMessageType]] = Future {
-    	new InMemoryPrododucer(config.destination, marshaller)
+  	def getProducer[PublishedMessageType](config: InMemoryProducerConfig)(implicit ec: ExecutionContext, marshaller: Marshaller[PublishedMessageType,Array[Byte]]) = Reader { env =>
+  	  Future {
+      	new InMemoryPrododucer(config.destination, marshaller)
+    	}
   	}
   }
  
@@ -52,11 +57,12 @@ case class InMemoryConsumerConfig(destination: String, clientId: String) extends
   val destinationType = Queue
 }
 
-trait InMemoryMessageConsumptionSupport extends MessageConsumptionSupport with ScalazStreamMessagingProvider[Array[Byte]] with Lifecycle {
+trait InMemoryMessageConsumptionSupport extends MessageConsumptionSupport with ScalazStreamMessagingProvider[Array[Byte]] {
   self =>
     
   lazy val subscriptions = TMap.empty[String, List[InMemoryConsumer[_,_]]]
 
+  type MessageConsumptionEnv = Unit
   type ConsumerConfigType = InMemoryConsumerConfig
   type ProviderMessageType = Array[Byte]
   
@@ -64,31 +70,25 @@ trait InMemoryMessageConsumptionSupport extends MessageConsumptionSupport with S
   def enqueue[T](destination: String, message: T)(implicit ec: ExecutionContext, m: Marshaller[T,Array[Byte]]): Future[Unit] = Future { 	 
 	  getOrCreateQueue(destination).enqueueOne(m.marshal(message)).run
   }
-
-  abstract override def shutdown(implicit ec: ExecutionContext): Future[Unit] = {
-  	// TODO: Shut down all active subscriptions
-  	atomic { implicit txn =>
-         	 
-  	}    
-  	super.shutdown
-  }
  
   object messageConsumption extends ConsumptionOps {
   	def getConsumer[T, ResultType]
   	      (config: InMemoryConsumerConfig)
   	      (handler: T => Future[ResultType])
-          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[Array[Byte],T]): Future[Consumer] =
-    	Future {
-      	atomic { implicit txn =>
-        	val queue = getOrCreateQueue(config.destination)
-        	val consumer = InMemoryConsumer[T,ResultType](config.destination,config.clientId,queue,handler,unmarshaller)
-       	 
-        	val existingSubscriptions = subscriptions.get(config.destination).getOrElse(List.empty)
-        	subscriptions.update(config.destination, consumer :: existingSubscriptions)
-       	 
-        	consumer
-      	}
-    	}    
+          (implicit ec: ExecutionContext, unmarshaller: Unmarshaller[Array[Byte],T]): Reader[MessageConsumptionEnv,Future[Consumer]] = 
+      Reader { env =>
+      	Future {
+        	atomic { implicit txn =>
+          	val queue = getOrCreateQueue(config.destination)
+          	val consumer = InMemoryConsumer[T,ResultType](config.destination,config.clientId,queue,handler,unmarshaller)
+         	 
+          	val existingSubscriptions = subscriptions.get(config.destination).getOrElse(List.empty)
+          	subscriptions.update(config.destination, consumer :: existingSubscriptions)
+         	 
+          	consumer
+        	}
+      	}    
+    	}
   }
 
   case class InMemoryConsumer[M,R](destination:String, clientId: String, queue: szQueue[Array[Byte]], handler: M => Future[R], unmarshaller: Unmarshaller[Array[Byte],M])(implicit ec: ExecutionContext) extends Consumer {

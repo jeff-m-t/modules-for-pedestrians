@@ -6,8 +6,13 @@ import org.json4s._
 
 import pedestrian.core.Lifecycle
 
-trait KVStoreSupport extends Lifecycle {
-  def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): Future[Option[JValue]]
-  def kvPut(userId: String, key: String, value: JValue)(implicit ec: ExecutionContext): Future[Unit]
-  def kvDelete(userId: String, key: String)(implicit ec: ExecutionContext): Future[Unit]
+import scalaz.{Reader => szReader}
+
+
+trait KVStoreSupport {
+  type KeyValueStoreEnv
+  
+  def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): szReader[KeyValueStoreEnv, Future[Option[JValue]]]
+  def kvPut(userId: String, key: String, value: JValue)(implicit ec: ExecutionContext): szReader[KeyValueStoreEnv, Future[Unit]]
+  def kvDelete(userId: String, key: String)(implicit ec: ExecutionContext): szReader[KeyValueStoreEnv,Future[Unit]]
 }

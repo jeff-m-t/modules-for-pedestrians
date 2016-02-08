@@ -2,7 +2,7 @@
 *.log
 
 # sbt specific
-.cache
+.cache*
 .history
 .lib/
 dist/*
@@ -22,3 +22,4 @@ project/plugins/project/
 # ensime specific
 *#
 *~
+/bin/
