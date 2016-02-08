@@ -59,47 +59,204 @@
 				<section>
 					<h3>Chapter 1 - Setup</h3>
 					<p>Wherein:</p>
-						<li>an application that stores user specific data is envisioned</li>
-						<li>an interface for an underlaying KV Store is created</li>
-						<li>an in-memory implementation is sketched</li>
+					<li>an application that stores user specific data is envisioned</li>
+					<li>an interface for an underlaying KV Store is created</li>
+					<li>an in-memory implementation is sketched</li>
+
+					<aside class="notes">
+						<p>Requirements</p>
+						<ul>
+							<li>Web service for storing blobs of data</li>
+							<li>Multiple named blobs per user</li>
+							<li>Blobs are JSON docs</li>
+						</ul>
+
+						<p>focus on the app itself.  worry about how it is exposed later</p>
+						<p>define an interface and give it a simple implementation for testing</p>
+					</aside>
 				</section>
 
 				<section>
 					<h3>Chapter 2 - Prototype</h3>
 					<p>Wherein:</p>
-						<li>the application is exposed as a service</li>
-						<li>early integration ensues</li>
+					<li>the application is exposed as a service</li>
+					<li>early integration ensues</li>
+
+					<aside class="notes">
+						<p>use the in-memory module impl to expose a prototype service</p>
+						<p>early integration</p>
+					</aside>
 				</section>
 
 				<section>
 					<h3>Chapter 3 - Implementation</h3>
 					<p>Wherein:</p>
-						<li>a concrete backend is chosen</li>
-						<li>a real world implementation is attempted</li>
+					<li>a concrete backend is chosen</li>
+					<li>a real world implementation is attempted</li>
+
+					<aside class="notes">
+						<p>implement the module using mongodb</p>
+						<p>config in base class => NPE</p>
+					</aside>
 				</section>
 
 				<section>
 					<h3>Chapter 4 - Lifecycle</h3>
 					<p>Wherein:</p>
-						<li>a configuration issue is discovered</li>
-						<li>a simple application lifecycle is employed</li>
+					<li>a configuration issue is discovered</li>
+					<li>a simple application lifecycle is employed</li>
+
+					<aside class="notes">
+						<p>add a concept of life cycle so apps modules can initialize themselves safely</p>
+						<p>abstract override</p>
+						<p>easy to forget the "abstract" part - oops</p>
+					</aside>
 				</section>
 
 				<section>
 					<h3>Chapter 5 - Business Logic</h3>
 					<p>Wherein:</p>
-						<li>scope creeps</li>
-						<li>early idealizations are abandoned</li>
+					<li>scope creeps</li>
+					<li>early idealizations are abandoned</li>
+
+					<aside class="notes">
+						<p>make things more interesting - add more features</p>
+						<p>messaging - e.g. RabitMQ, Kafka, etc.</p>
+						<p>access control - public vs private items</p>
+					</aside>
 				</section>
 
 				<section>
-					<h3>Epilogue</h3>
-  					<li>hints a a broader perspective</li>
-	  				<li>a path forward is explored</li>
+					<section>
+						<h3>Epilogue</h3>
+  					<li>perspective is achieved</li>
+					</section>
+					<section>
+						<h3>Dependency Injection</h3>
+						<ul>
+							<li class="fragment">Constructor Parameters</li>
+							<ul class="fragment">
+								<li>Clasic OOP dependency injection</li>
+								<li>Spring, Guice, MacWire</li>
+								<li>Autowiring?</li>
+								<li class="fragment">Basically what we've been doing here</li>
+							</ul>
+						</ul>
+					</section>
+					<section>
+						<h3>Constructor Parameter Injection</h3>
+						<pre><code data-trim data-noescape>
+trait GreetingSupport {
+  def greet(name: String, languageTag: String): String
+}
+
+trait InMemoryGreetingSupport extends GreetingSupport {
+  def localizedGreetings: Map[String,String]
+  def greet(name: String, languageTag: String): String =
+    s"${localizedGreetings.get(languageTag).getOrElse("Hello")} $name"
+}
+
+abstract class App extends GreetingSupport {
+  def makeGreeting(name: String, tag: String) = greet(name,tag)
+}
+
+val app = new App with InMemoryGreetingSupport {
+  override val localizedGreetings = Map("es" -> "Hola","en" -> "Hiya")
+}
+						</code></pre>
+					</section>
+					<section>
+						<h3>Constructor Parameter Injection</h3>
+						<pre><code data-trim data-noescape>
+case class InMemoryGreeter(localizedGreetings: Map[String,String])
+	extends InMemoryGreetingSupport
+
+val greeter = InMemoryGreeter(Map("es" -> "Hola","en" -> "Hiya"))
+
+val greeter2 = new pedestrian.core.BlankSlate with InMemoryGreetingSupport {
+  override val localizedGreetings = Map("es" -> "Hola","en" -> "Hiya")
+}
+
+class App(greeter: GreetingSupport) {
+  def makeGreeting(name: String, tag: String) = greeter.greet(name,tag)
+}
+
+println(app.makeGreeting("José","es")) //>> Hola José
+println(app.makeGreeting("Joe","en"))  //>> Hiya Joe
+						</code></pre>
+						</section>
+					<section>
+						<h3>Dependency Injection</h3>
+						<ul>
+							<li>Constructor Parameters</li>
+							<li class="fragment">Reader Monad</li>
+							<ul class="fragment">
+								<li>Clasic FP dependency injection</li>
+								<li>Readers contain a "description of a<br/>computation"</li>
+								<li>Function composition</li>
+								<li>Execute the computation by providing<br/>an "environment" or "configuration"</li>
+							</ul>
+						</ul>
+					</section>
+					<section>
+						<h3>Reader Monad</h3>
+						<ul>
+							<li>Function composition expressed as a Monad</li>
+						</ul>
+						<pre><code data-trim data-noescape>
+type Env = String
+
+def greet(name: String): Reader[Env,String] = Reader(env => s"$env $name")
+def sizer(s: String): Reader[Env,Int] = Reader(env => s.length)
+
+val computation: Reader[Env,Int] = greet("Jack").flatMap(s => sizer(s))
+
+println(computation.run("Hello"))
+
+val computation2: Reader[Env,Int] =
+  for {
+    g <- greet("Jack")
+    l <- sizer(g)
+  }
+  yield l
+
+println(computation2.run("Hiya"))
+						</code></pre>
+					</section>
+					<section>
+						<h3>Modules of Readers</h3>
+						<pre><code data-trim data-noescape>
+trait GreetingSupport {
+  type GreetingEnv
+  def greet(name: String, languageTag: String): Reader[GreetingEnv,String]
+}
+
+trait InMemoryGreetingSupport extends GreetingSupport {
+  type GreetingEnv = Map[String,String]
+  def greet(name: String, languageTag: String) = Reader { env =>
+    s"${env.get(languageTag).getOrElse("Hello")} $name"
+  }
+}
+						</code></pre>
+					</section>
+					<section>
+						<h3>Modules of Readers</h3>
+						<pre><code data-trim data-noescape>
+abstract class App extends GreetingSupport {
+	val env: GreetingEnv
+	def makeGreeting(name: String, tag: String) = greet(name,tag).run(env)
+}
+
+val app = new App with InMemoryGreetingSupport {
+	val env = Map("es" -> "Hola","en" -> "Hiya")
+}
+
+println(app.makeGreeting("José","es")) //>> Hola José
+println(app.makeGreeting("Joe","en"))  //>> Hiya Joe
+						</code></pre>
+					</section>
 				</section>
-
 			</div>
-
 		</div>
 
 		<script src="lib/js/head.min.js"></script>
