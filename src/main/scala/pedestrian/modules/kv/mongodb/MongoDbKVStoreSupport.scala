@@ -21,12 +21,7 @@ trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
   
   import MongoDbKVStoreSupport._
   
-  val mongoUrl: String
-  val mongoDatabase: String
-  val mongoCollection: String
-  
-  val client = Promise[MongoClient]()
-  val collection = Promise[MongoCollection[Document]]()
+  val collection: MongoCollection[Document]
   
   def kvGet(userId: String, key: String)(implicit ec: ExecutionContext): Future[Option[JValue]] = {
     
@@ -34,10 +29,9 @@ trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
     val proj = fields(excludeId(),include(key))
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Option[JValue]]()
-        c.find(query).projection(proj).first.subscribe(getObs(key,p))    
+        collection.find(query).projection(proj).first.subscribe(getObs(key,p))    
         p.future
       }
     } yield res
@@ -50,10 +44,9 @@ trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
     val options = new UpdateOptions(); options.upsert(true);
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Unit]()
-        c.updateOne(filter,update,options).subscribe(updateObs(p))    
+        collection.updateOne(filter,update,options).subscribe(updateObs(p))    
         p.future
       }
     } yield res
@@ -65,38 +58,13 @@ trait MongoDbKVStoreSupport extends KVStoreSupport with Lifecycle {
     val update = unset(key)
     
     for {
-      c <- collection.future
       res <- {
         val p = Promise[Unit]()
-        c.updateOne(filter,update).subscribe(updateObs(p))   
+        collection.updateOne(filter,update).subscribe(updateObs(p))   
         p.future
       }
     } yield res 
-  }
-  
-  abstract override def startup(implicit ec: ExecutionContext) = {   
-    try {
-      val c = MongoClient(mongoUrl)
-      val d = c.getDatabase(mongoDatabase)
-      val col = d.getCollection(mongoCollection)
-      
-      client.success(c)
-      collection.success(col)
-    }
-    catch {
-      case NonFatal(ex) => collection.failure(ex)
-    }
-    
-    super.startup
-  }
- 
-  abstract override def shutdown(implicit ec: ExecutionContext) = 
-    for {
-      _ <- super.shutdown
-      c <- client.future
-    }
-    yield c.close()
-  
+  }  
 }
 
 object MongoDbKVStoreSupport {
