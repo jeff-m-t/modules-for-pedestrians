@@ -50,10 +50,27 @@
 				</section>
 
 				<section>
-					<h3>Introduction</h3>
-					<p><i>Wherein:</i></p>
+					<section>
+						<h3>Introduction</h3>
+						<p><i>Wherein:</i></p>
 						<li>bets are hedged</li>
 						<li>industry best practice CYA techniques are employed</li>
+					</section>
+					<section>
+						<h3>Introduction</h3>
+						<p>Who am I?</p>
+						<li>Senior Engineer at Whitepages</li>
+						<li>Using Scala in Production since 2010</li>
+						<li>Not trained in Computer Science</li>
+						<li>Github: <a href="https://github.com/jeff-m-t">https://github.com/jeff-m-t</a></li>
+					</section>
+					<section>
+						<h3>Introduction</h3>
+						<p>What sort of snake oil am I selling?</p>
+						<li>I'm not selling anything</li>
+						<li>Just telling a story about how I build microservices</li>
+						<li>A shaggy dog story at that</li>
+					</section>
 				</section>
 
 				<section>
@@ -137,7 +154,7 @@
 							<li class="fragment">Constructor Parameters</li>
 							<ul class="fragment">
 								<li>Clasic OOP dependency injection</li>
-								<li>Spring, Guice, MacWire</li>
+								<li>Spring, Guice, MacWire?</li>
 								<li>Autowiring?</li>
 								<li class="fragment">Basically what we've been doing here</li>
 							</ul>
@@ -185,19 +202,19 @@ println(app.makeGreeting("José","es")) //>> Hola José
 println(app.makeGreeting("Joe","en"))  //>> Hiya Joe
 						</code></pre>
 						</section>
-					<section>
-						<h3>Dependency Injection</h3>
-						<ul>
-							<li>Constructor Parameters</li>
-							<li class="fragment">Reader Monad</li>
-							<ul class="fragment">
-								<li>Clasic FP dependency injection</li>
-								<li>Readers contain a "description of a<br/>computation"</li>
-								<li>Function composition</li>
-								<li>Execute the computation by providing<br/>an "environment" or "configuration"</li>
+						<section>
+							<h3>Dependency Injection</h3>
+							<ul>
+								<li>Constructor Parameters</li>
+								<li class="fragment">Reader Monad</li>
+								<ul class="fragment">
+									<li>Clasic FP dependency injection</li>
+									<li>Readers contain a "description of a<br/>computation"</li>
+									<li>Function composition</li>
+									<li>Execute the computation by providing<br/>an "environment" or "configuration"</li>
+								</ul>
 							</ul>
-						</ul>
-					</section>
+						</section>
 					<section>
 						<h3>Reader Monad</h3>
 						<ul>
@@ -255,7 +272,20 @@ println(app.makeGreeting("José","es")) //>> Hola José
 println(app.makeGreeting("Joe","en"))  //>> Hiya Joe
 						</code></pre>
 					</section>
+					<section>
+						<h3>That's my Shaggy Dog Story</h3>
+					</section>
 				</section>
+
+				<section>
+					<h3>References</h3>
+					<ul>
+						<li>Daniel Spiewak - <a href="https://www.youtube.com/watch?v=yLbdw06tKPQ">Cake Pattern: The Bakery from the Black Lagoon</a></li>
+						<li>Rúnar Bjarnason - <a href="https://www.youtube.com/watch?v=ZasXwtTRkio">Dead-Simple Dependency Injection</a></li>
+						<li>Daniel Westheide - <a href="http://danielwestheide.com/blog/2013/02/13/the-neophytes-guide-to-scala-part-13-path-dependent-types.html">The Neophyte's Guide to Scala Part 13: Path-dependent Types</a></li>
+						<li>Adam Warski - <a href="http://www.warski.org/blog/2014/02/using-scala-traits-as-modules-or-the-thin-cake-pattern/">Using Scala traits as modules, or the "Thin Cake" Pattern</a></li>
+						<li>Originate Dev Blog - <a href="">Scrap Your Cake Pattern Biolerplate: Dependency Injection Using the Reader Monad</a></li>
+					</ul>
 			</div>
 		</div>
 
