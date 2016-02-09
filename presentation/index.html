@@ -71,32 +71,34 @@
 						<li>Just telling a story about how I build microservices</li>
 						<li>A shaggy dog story at that</li>
 					</section>
+					<section>
+						<h3>Setting the stage</h3>
+						<p>Vague Initial Requirements</p>
+						<li class="fragment">Build a service that lets users store stuff</li>
+						<li class="fragment">Each user can have multiple items</li>
+						<li class="fragment">Items are arbitrary JSON documents</li>
+					</section>
 				</section>
 
 				<section>
 					<h3>Chapter 1 - Setup</h3>
 					<p>Wherein:</p>
-					<li>an application that stores user specific data is envisioned</li>
-					<li>an interface for an underlaying KV Store is created</li>
-					<li>an in-memory implementation is sketched</li>
+					<li>an application is envisioned</li>
+					<li>core components are created</li>
+					<li>a vision is sketched</li>
 
 					<aside class="notes">
-						<p>Requirements</p>
-						<ul>
-							<li>Web service for storing blobs of data</li>
-							<li>Multiple named blobs per user</li>
-							<li>Blobs are JSON docs</li>
-						</ul>
-
-						<p>focus on the app itself.  worry about how it is exposed later</p>
-						<p>define an interface and give it a simple implementation for testing</p>
+					  <p>The way a webservice is exposed can change</p>
+						<p>The core logic doesn't</p>
+						<p>Start with the app (interfaces and datastructures)</p>
+						<p>Worry about how it is exposed later</p>
 					</aside>
 				</section>
 
 				<section>
 					<h3>Chapter 2 - Prototype</h3>
 					<p>Wherein:</p>
-					<li>the application is exposed as a service</li>
+					<li>a web service is born</li>
 					<li>early integration ensues</li>
 
 					<aside class="notes">
@@ -120,11 +122,12 @@
 				<section>
 					<h3>Chapter 4 - Lifecycle</h3>
 					<p>Wherein:</p>
-					<li>a configuration issue is discovered</li>
-					<li>a simple application lifecycle is employed</li>
+					<li>an issue is discovered</li>
+					<li>a lifecycle is employed</li>
 
 					<aside class="notes">
 						<p>add a concept of life cycle so apps modules can initialize themselves safely</p>
+						<p>fix code duplication between test and it</p>
 						<p>abstract override</p>
 						<p>easy to forget the "abstract" part - oops</p>
 					</aside>
@@ -138,15 +141,17 @@
 
 					<aside class="notes">
 						<p>make things more interesting - add more features</p>
-						<p>messaging - e.g. RabitMQ, Kafka, etc.</p>
+						<p>messaging - e.g. RabitMQ, Kafka, etc. - realistic interface</p>
 						<p>access control - public vs private items</p>
+						<p>unit tests for overall business logic</p>
 					</aside>
 				</section>
 
 				<section>
 					<section>
 						<h3>Epilogue</h3>
-  					<li>perspective is achieved</li>
+  					<li>some perspective is achieved</li>
+						<li>a shaggy dog is discovered</li>
 					</section>
 					<section>
 						<h3>Dependency Injection</h3>
