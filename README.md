@@ -1,6 +1,8 @@
 # modules-for-pedestrians
 Source code to accompany my "Modules for Pedestrians" presentation
 
+I tried to structure this repo/presentation as a story, told through git history, about how I structure code in microservices.  Unfortunately, it just didn't work very well.  I think the code here is useful as a narrative but the slides aren't worth much.  I'm goting to restructure the talk and the repo.  I'll add a link to the new version when it is ready. 
+
 There are tags for each of the key points in the presentation:
 * ch1 - Initial set up.  KV module interface defined.  Simple im-memory implementation
 * ch2 - Prototype web service based on in-memory impl.
@@ -14,4 +16,4 @@ There are tags for each of the key points in the presentation:
 Integration Tests
 =================
 
-$ docker run -p 27017:27017 -d mongo
+$ docker run -p 27017:27017 mongo
